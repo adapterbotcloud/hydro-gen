@@ -1,9 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
 import { Icons } from "@/components/Icons";
-import { api } from "@/lib/api";
 import clsx from "clsx";
 
 interface SimulationParams {
@@ -25,6 +23,35 @@ interface SimulationResults {
     social: number;
     ambiental: number;
     infraestrutura: number;
+  };
+}
+
+// Mock simulation function
+function calculateMockResults(params: SimulationParams): SimulationResults {
+  const baseEmpregos = params.investimento * 18;
+  const locationMultiplier = params.localizacao === "Pecém" ? 1.2 : params.localizacao === "Fortaleza" ? 1.0 : 0.85;
+  const energyMultiplier = params.fonteEnergia === "Híbrida" ? 1.15 : params.fonteEnergia === "Eólica" ? 1.1 : 1.0;
+  
+  const empregos = Math.round(baseEmpregos * locationMultiplier * energyMultiplier);
+  const pib = Number((params.investimento * 0.0045 * locationMultiplier).toFixed(1));
+  const co2Reduzido = Math.round(params.capacidade * 850 * energyMultiplier);
+  const h2Produzido = Math.round(params.capacidade * 0.18);
+  const roi = params.fonteEnergia === "Híbrida" ? 7 : params.fonteEnergia === "Eólica" ? 8 : 9;
+  const riskScore = params.localizacao === "Pecém" ? 22 : params.localizacao === "Fortaleza" ? 35 : 48;
+  
+  return {
+    empregos,
+    pib,
+    co2Reduzido,
+    h2Produzido,
+    roi,
+    riskScore,
+    dimensoes: {
+      economico: Math.min(95, Math.round(60 + params.investimento / 30)),
+      social: Math.min(90, Math.round(55 + empregos / 500)),
+      ambiental: Math.min(98, Math.round(70 + co2Reduzido / 15000)),
+      infraestrutura: params.localizacao === "Pecém" ? 92 : params.localizacao === "Fortaleza" ? 78 : 55,
+    },
   };
 }
 
@@ -135,16 +162,20 @@ export default function SimulationPage() {
     fonteEnergia: "Eólica",
   });
   const [results, setResults] = useState<SimulationResults | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const simulationMutation = useMutation({
-    mutationFn: async (params: SimulationParams) => {
-      const response = await api.post("/simulation", params);
-      return response.data;
-    },
-    onSuccess: (data) => {
-      setResults(data);
-    },
-  });
+  const handleSimulate = () => {
+    setIsLoading(true);
+    setResults(null);
+    
+    // Simulate API delay (2-3.5 seconds)
+    const delay = 2000 + Math.random() * 1500;
+    setTimeout(() => {
+      const mockResults = calculateMockResults(params);
+      setResults(mockResults);
+      setIsLoading(false);
+    }, delay);
+  };
 
   const dimensionBars = results
     ? [
@@ -209,31 +240,31 @@ export default function SimulationPage() {
           />
 
           <button
-            onClick={() => simulationMutation.mutate(params)}
-            disabled={simulationMutation.isPending}
+            onClick={handleSimulate}
+            disabled={isLoading}
             className="w-full py-3 mt-2 bg-gradient-to-r from-hydro-accentDim to-hydro-accent rounded-xl text-hydro-bg font-bold text-sm transition-all hover:shadow-lg hover:shadow-hydro-accentGlow disabled:opacity-50"
           >
-            {simulationMutation.isPending ? "Processando cenário..." : "Simular Cenário"}
+            {isLoading ? "Processando cenário..." : "Simular Cenário"}
           </button>
         </div>
 
         {/* Results */}
         <div>
-          {!results && !simulationMutation.isPending && (
+          {!results && !isLoading && (
             <div className="h-full flex items-center justify-center flex-col gap-3 text-hydro-textDim border-2 border-dashed border-hydro-border rounded-2xl p-10">
               <Icons.Simulate />
               <span className="text-sm">Configure os parâmetros e clique em &quot;Simular Cenário&quot;</span>
             </div>
           )}
 
-          {simulationMutation.isPending && (
+          {isLoading && (
             <div className="h-full flex items-center justify-center flex-col gap-3">
               <div className="w-10 h-10 border-[3px] border-hydro-border border-t-hydro-accent rounded-full animate-spin" />
               <span className="text-hydro-textMuted text-[13px]">Processando modelo de impacto...</span>
             </div>
           )}
 
-          {results && !simulationMutation.isPending && (
+          {results && !isLoading && (
             <div>
               <div className="grid grid-cols-3 gap-3 mb-4">
                 <ResultCard
