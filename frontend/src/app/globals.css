@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --hydro-bg: #0A0F0D;
+  --hydro-card: #111916;
+  --hydro-accent: #00E676;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--hydro-bg);
+  color: #E8F5E9;
+  font-family: 'DM Sans', sans-serif;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--hydro-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4CAF50;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00E676;
+}
+
+/* Selection */
+::selection {
+  background: rgba(0, 230, 118, 0.3);
+  color: #fff;
+}

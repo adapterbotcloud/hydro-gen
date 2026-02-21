@@ -1,0 +1,35 @@
+{
+  "name": "hydro-gen-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "14.2.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "@tanstack/react-query": "^5.28.0",
+    "axios": "^1.6.7",
+    "framer-motion": "^11.0.8",
+    "react-icons": "^5.0.1",
+    "react-hot-toast": "^2.4.1",
+    "recharts": "^2.12.2",
+    "clsx": "^2.1.0",
+    "tailwind-merge": "^2.2.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.2",
+    "@types/node": "^20.11.24",
+    "@types/react": "^18.2.61",
+    "@types/react-dom": "^18.2.19",
+    "autoprefixer": "^10.4.18",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "14.2.3"
+  }
+}
