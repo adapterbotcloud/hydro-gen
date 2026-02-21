@@ -13,45 +13,25 @@ interface SimulationParams {
 
 interface SimulationResults {
   empregos: number;
-  pib: number;
+  pib: string;
   co2Reduzido: number;
   h2Produzido: number;
-  roi: number;
+  roi: string;
   riskScore: number;
-  dimensoes: {
-    economico: number;
-    social: number;
-    ambiental: number;
-    infraestrutura: number;
-  };
 }
 
-// Mock simulation function
-function calculateMockResults(params: SimulationParams): SimulationResults {
-  const baseEmpregos = params.investimento * 18;
-  const locationMultiplier = params.localizacao === "Pecém" ? 1.2 : params.localizacao === "Fortaleza" ? 1.0 : 0.85;
-  const energyMultiplier = params.fonteEnergia === "Híbrida" ? 1.15 : params.fonteEnergia === "Eólica" ? 1.1 : 1.0;
-  
-  const empregos = Math.round(baseEmpregos * locationMultiplier * energyMultiplier);
-  const pib = Number((params.investimento * 0.0045 * locationMultiplier).toFixed(1));
-  const co2Reduzido = Math.round(params.capacidade * 850 * energyMultiplier);
-  const h2Produzido = Math.round(params.capacidade * 0.18);
-  const roi = params.fonteEnergia === "Híbrida" ? 7 : params.fonteEnergia === "Eólica" ? 8 : 9;
-  const riskScore = params.localizacao === "Pecém" ? 22 : params.localizacao === "Fortaleza" ? 35 : 48;
+// Calculations from prototype
+function calculateResults(params: SimulationParams): SimulationResults {
+  const mult = params.fonteEnergia === "Eólica" ? 1.2 : params.fonteEnergia === "Solar" ? 1.0 : 1.35;
+  const locMult = params.localizacao === "Pecém" ? 1.3 : params.localizacao === "Fortaleza" ? 1.1 : 0.9;
   
   return {
-    empregos,
-    pib,
-    co2Reduzido,
-    h2Produzido,
-    roi,
-    riskScore,
-    dimensoes: {
-      economico: Math.min(95, Math.round(60 + params.investimento / 30)),
-      social: Math.min(90, Math.round(55 + empregos / 500)),
-      ambiental: Math.min(98, Math.round(70 + co2Reduzido / 15000)),
-      infraestrutura: params.localizacao === "Pecém" ? 92 : params.localizacao === "Fortaleza" ? 78 : 55,
-    },
+    empregos: Math.round(params.investimento * 95 * mult * locMult),
+    pib: (params.investimento * 0.08 * mult * locMult).toFixed(1),
+    co2Reduzido: Math.round(params.capacidade * 4.2 * mult),
+    h2Produzido: Math.round(params.capacidade * 0.85 * mult),
+    roi: (3.2 + Math.random() * 2).toFixed(1),
+    riskScore: Math.round(25 + Math.random() * 35),
   };
 }
 
@@ -162,29 +142,22 @@ export default function SimulationPage() {
     fonteEnergia: "Eólica",
   });
   const [results, setResults] = useState<SimulationResults | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSimulate = () => {
-    setIsLoading(true);
-    setResults(null);
-    
-    // Simulate API delay (2-3.5 seconds)
-    const delay = 2000 + Math.random() * 1500;
+  const runSimulation = () => {
+    setLoading(true);
     setTimeout(() => {
-      const mockResults = calculateMockResults(params);
-      setResults(mockResults);
-      setIsLoading(false);
-    }, delay);
+      setResults(calculateResults(params));
+      setLoading(false);
+    }, 1500);
   };
 
-  const dimensionBars = results
-    ? [
-        { label: "Econômico", value: results.dimensoes.economico, color: "#00E676" },
-        { label: "Social", value: results.dimensoes.social, color: "#40C4FF" },
-        { label: "Ambiental", value: results.dimensoes.ambiental, color: "#FFD740" },
-        { label: "Infraestrutura", value: results.dimensoes.infraestrutura, color: "#CE93D8" },
-      ]
-    : [];
+  const dimensionBars = [
+    { label: "Econômico", value: 82, color: "#00E676" },
+    { label: "Social", value: 68, color: "#40C4FF" },
+    { label: "Ambiental", value: 91, color: "#FFD740" },
+    { label: "Infraestrutura", value: 55, color: "#CE93D8" },
+  ];
 
   return (
     <div className="h-full overflow-auto p-6">
@@ -240,31 +213,31 @@ export default function SimulationPage() {
           />
 
           <button
-            onClick={handleSimulate}
-            disabled={isLoading}
+            onClick={runSimulation}
+            disabled={loading}
             className="w-full py-3 mt-2 bg-gradient-to-r from-hydro-accentDim to-hydro-accent rounded-xl text-hydro-bg font-bold text-sm transition-all hover:shadow-lg hover:shadow-hydro-accentGlow disabled:opacity-50"
           >
-            {isLoading ? "Processando cenário..." : "Simular Cenário"}
+            {loading ? "Processando cenário..." : "Simular Cenário"}
           </button>
         </div>
 
         {/* Results */}
         <div>
-          {!results && !isLoading && (
+          {!results && !loading && (
             <div className="h-full flex items-center justify-center flex-col gap-3 text-hydro-textDim border-2 border-dashed border-hydro-border rounded-2xl p-10">
               <Icons.Simulate />
               <span className="text-sm">Configure os parâmetros e clique em &quot;Simular Cenário&quot;</span>
             </div>
           )}
 
-          {isLoading && (
+          {loading && (
             <div className="h-full flex items-center justify-center flex-col gap-3">
               <div className="w-10 h-10 border-[3px] border-hydro-border border-t-hydro-accent rounded-full animate-spin" />
               <span className="text-hydro-textMuted text-[13px]">Processando modelo de impacto...</span>
             </div>
           )}
 
-          {results && !isLoading && (
+          {results && !loading && (
             <div>
               <div className="grid grid-cols-3 gap-3 mb-4">
                 <ResultCard

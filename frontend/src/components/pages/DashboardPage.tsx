@@ -1,76 +1,30 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { Icons } from "@/components/Icons";
-import { api } from "@/lib/api";
+
+const stats = [
+  { label: "Documentos Indexados", value: "847", trend: "+23 esta semana" },
+  { label: "Consultas Realizadas", value: "12.4k", trend: "+18% vs mês anterior" },
+  { label: "Fontes Integradas", value: "42", trend: "IBGE, ANEEL, IPECE..." },
+  { label: "Usuários Ativos", value: "156", trend: "87 gestores públicos" },
+];
+
+const recentQueries = [
+  { query: "Incentivos fiscais para empresas de H2V em Pecém", user: "SEDET", time: "2min" },
+  { query: "Dados de empregabilidade no setor de energia renovável", user: "STDS", time: "15min" },
+  { query: "Comparativo de legislação H2V entre Ceará e Bahia", user: "PGE", time: "1h" },
+  { query: "Impacto ambiental de parques eólicos na zona costeira", user: "SEMACE", time: "3h" },
+];
+
+const metrics = [
+  { label: "Tempo Médio de Resposta", value: "2.3s", target: "< 5s", ok: true },
+  { label: "Precisão de Recuperação", value: "87%", target: "> 80%", ok: true },
+  { label: "Satisfação dos Usuários", value: "4.2/5", target: "> 4.0", ok: true },
+  { label: "Uptime do Sistema", value: "99.7%", target: "> 99%", ok: true },
+  { label: "Taxa de Alucinação", value: "3.1%", target: "< 5%", ok: true },
+];
 
 export default function DashboardPage() {
-  const { data: analytics } = useQuery({
-    queryKey: ["analytics"],
-    queryFn: async () => {
-      const response = await api.get("/analytics");
-      return response.data;
-    },
-  });
-
-  const { data: recentQueries } = useQuery({
-    queryKey: ["recent-queries"],
-    queryFn: async () => {
-      const response = await api.get("/analytics/recent-queries");
-      return response.data;
-    },
-  });
-
-  const stats = [
-    {
-      label: "Documentos Indexados",
-      value: analytics?.documents?.total || "—",
-      trend: `${analytics?.documents?.chunks || 0} chunks`,
-    },
-    {
-      label: "Consultas Realizadas",
-      value: analytics?.queries?.total || "—",
-      trend: `${analytics?.queries?.last_7_days || 0} nos últimos 7 dias`,
-    },
-    {
-      label: "Fontes Integradas",
-      value: Object.keys(analytics?.documents?.by_type || {}).length || "—",
-      trend: "IBGE, ANEEL, IPECE...",
-    },
-    {
-      label: "Tempo Médio de Resposta",
-      value: analytics?.queries?.avg_response_time_ms ? `${(analytics.queries.avg_response_time_ms / 1000).toFixed(1)}s` : "—",
-      trend: "Meta: < 5s",
-    },
-  ];
-
-  const performanceMetrics = [
-    {
-      label: "Tempo Médio de Resposta",
-      value: analytics?.queries?.avg_response_time_ms ? `${(analytics.queries.avg_response_time_ms / 1000).toFixed(1)}s` : "—",
-      target: "< 5s",
-      ok: (analytics?.queries?.avg_response_time_ms || 0) < 5000,
-    },
-    {
-      label: "Satisfação dos Usuários",
-      value: analytics?.satisfaction?.average_score ? `${analytics.satisfaction.average_score}/5` : "—",
-      target: "> 4.0",
-      ok: (analytics?.satisfaction?.average_score || 0) >= 4.0,
-    },
-    {
-      label: "Uptime do Sistema",
-      value: analytics?.system?.uptime_percent ? `${analytics.system.uptime_percent}%` : "—",
-      target: "> 99%",
-      ok: (analytics?.system?.uptime_percent || 0) >= 99,
-    },
-    {
-      label: "Status do Sistema",
-      value: analytics?.system?.status === "online" ? "Online" : "Offline",
-      target: "Online",
-      ok: analytics?.system?.status === "online",
-    },
-  ];
-
   return (
     <div className="h-full overflow-auto p-6">
       <div className="flex items-center gap-2 mb-1">
@@ -94,7 +48,7 @@ export default function DashboardPage() {
             <div className="text-[11px] text-hydro-textDim uppercase tracking-wider">
               {s.label}
             </div>
-            <div className="text-[32px] font-mono font-bold text-hydro-accent mt-2 mb-1">
+            <div className="text-[32px] font-mono font-bold text-hydro-accent my-2">
               {s.value}
             </div>
             <div className="text-xs text-hydro-textMuted">{s.trend}</div>
@@ -108,31 +62,19 @@ export default function DashboardPage() {
           <div className="text-sm font-semibold text-hydro-text mb-4">
             Consultas Recentes
           </div>
-          {recentQueries?.queries?.length > 0 ? (
-            recentQueries.queries.map((q: { id: number; question: string; response_time_ms: number; created_at: string }, i: number) => (
-              <div
-                key={q.id}
-                className={`py-3 ${i < recentQueries.queries.length - 1 ? "border-b border-hydro-border" : ""} animate-fade-in-up`}
-                style={{ animationDelay: `${i * 0.1}s` }}
-              >
-                <div className="text-[13px] text-hydro-text mb-1">
-                  {q.question}
-                </div>
-                <div className="flex gap-3 text-[11px] text-hydro-textDim">
-                  <span className="text-hydro-accentDim font-mono">
-                    {q.response_time_ms}ms
-                  </span>
-                  <span>
-                    {new Date(q.created_at).toLocaleString("pt-BR")}
-                  </span>
-                </div>
+          {recentQueries.map((q, i) => (
+            <div
+              key={i}
+              className="py-3 border-b border-hydro-border last:border-0 animate-fade-in-up"
+              style={{ animationDelay: `${i * 0.1}s` }}
+            >
+              <div className="text-[13px] text-hydro-text mb-1">{q.query}</div>
+              <div className="flex gap-3 text-[11px] text-hydro-textDim">
+                <span className="text-hydro-accentDim font-mono">{q.user}</span>
+                <span>{q.time} atrás</span>
               </div>
-            ))
-          ) : (
-            <div className="text-hydro-textDim text-sm py-4 text-center">
-              Nenhuma consulta recente
             </div>
-          )}
+          ))}
         </div>
 
         {/* Performance */}
@@ -140,10 +82,10 @@ export default function DashboardPage() {
           <div className="text-sm font-semibold text-hydro-text mb-4">
             Desempenho do Sistema
           </div>
-          {performanceMetrics.map((m, i) => (
+          {metrics.map((m, i) => (
             <div
               key={i}
-              className={`flex items-center justify-between py-2.5 ${i < performanceMetrics.length - 1 ? "border-b border-hydro-border" : ""}`}
+              className="flex items-center justify-between py-2.5 border-b border-hydro-border last:border-0"
             >
               <span className="text-[13px] text-hydro-textMuted">{m.label}</span>
               <div className="flex items-center gap-2">
